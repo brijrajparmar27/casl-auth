@@ -1,15 +1,21 @@
 import { useContext } from 'react';
 import { users } from '../constants/app-constants';
 import { NotesContext } from '../context/NotesContect';
+import usePermissions from '../permissions/permissionsEngine';
 
 const AppContent = () => {
   const { notes, setNotes } = useContext(NotesContext);
+  const ability = usePermissions();
 
   const handleDelete = (note) => {
+    if (ability.cannot('delete', { __type: 'note', userId: note.createdBy }))
+      return;
     setNotes((prev) => prev.filter((each) => each.id !== note.id));
   };
 
   const handleCheckChange = (note) => {
+    if (ability.cannot('update', { __type: 'note', userId: note.createdBy }))
+      return;
     setNotes((prev) =>
       prev.map((each) => ({
         ...each,
@@ -29,6 +35,7 @@ const AppContent = () => {
     >
       {users.map((sectionUser) => {
         if (sectionUser.isAdmin) return;
+
         return (
           <div
             key={sectionUser.id}
@@ -41,42 +48,63 @@ const AppContent = () => {
             }}
           >
             <h2 style={{ textAlign: 'left' }}>{sectionUser.title}</h2>
+
             {notes
               ?.filter((note) => note.createdBy === sectionUser.id)
-              .map((note) => (
-                <div
-                  key={note.id}
-                  style={{
-                    backgroundColor: '#3f3f3f',
-                    padding: '15px',
-                    borderRadius: '10px',
-                  }}
-                >
+              .map((note) => {
+                const canUpdate = ability.can('update', {
+                  __type: 'note',
+                  userId: note.createdBy,
+                });
+                const canDelete = ability.can('delete', {
+                  __type: 'note',
+                  userId: note.createdBy,
+                });
+
+                return (
                   <div
+                    key={note.id}
                     style={{
-                      display: 'flex',
-                      gap: '10px',
-                      justifyContent: 'space-between',
+                      backgroundColor: '#3f3f3f',
+                      padding: '15px',
+                      borderRadius: '10px',
                     }}
                   >
                     <div
                       style={{
                         display: 'flex',
                         gap: '10px',
-                        alignItems: 'center',
+                        justifyContent: 'space-between',
                       }}
                     >
-                      <input
-                        type="checkbox"
-                        checked={note.checked}
-                        onClick={() => handleCheckChange(note)}
-                      />
-                      <h4>{note.text}</h4>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '10px',
+                          alignItems: 'center',
+                        }}
+                      >
+                        {/* Checkbox visible only if user can update */}
+                        {canUpdate && (
+                          <input
+                            type="checkbox"
+                            checked={note.checked}
+                            onChange={() => handleCheckChange(note)}
+                          />
+                        )}
+                        <h4>{note.text}</h4>
+                      </div>
+
+                      {/* Delete button visible only if user can delete */}
+                      {canDelete && (
+                        <button onClick={() => handleDelete(note)}>
+                          Delete
+                        </button>
+                      )}
                     </div>
-                    <button onClick={() => handleDelete(note)}>Delete</button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
           </div>
         );
       })}
