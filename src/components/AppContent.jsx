@@ -1,20 +1,24 @@
-import { useContext } from 'react';
-import { users } from '../constants/app-constants';
-import { NotesContext } from '../context/NotesContect';
-import usePermissions from '../permissions/permissionsEngine';
+import { useContext } from "react";
+import { users } from "../constants/app-constants";
+import { NotesContext } from "../context/NotesContect";
+import usePermissions from "../permissions/permissions";
+import { UserContext } from "../context/UserContext";
 
 const AppContent = () => {
+  const { user } = useContext(UserContext);
   const { notes, setNotes } = useContext(NotesContext);
-  const ability = usePermissions();
+  const ability = usePermissions(user);
+
+  console.log(ability.rules);
 
   const handleDelete = (note) => {
-    if (ability.cannot('delete', { __type: 'note', userId: note.createdBy }))
+    if (ability.cannot("delete", { type: "note", userId: note.createdBy }))
       return;
     setNotes((prev) => prev.filter((each) => each.id !== note.id));
   };
 
   const handleCheckChange = (note) => {
-    if (ability.cannot('update', { __type: 'note', userId: note.createdBy }))
+    if (ability.cannot("update", { type: "note", userId: note.createdBy }))
       return;
     setNotes((prev) =>
       prev.map((each) => ({
@@ -27,10 +31,10 @@ const AppContent = () => {
   return (
     <div
       style={{
-        display: 'flex',
-        height: '100%',
-        gap: '15px',
-        padding: '0px 15px 15px 15px',
+        display: "flex",
+        height: "100%",
+        gap: "15px",
+        padding: "0px 15px 15px 15px",
       }}
     >
       {users.map((sectionUser) => {
@@ -40,48 +44,54 @@ const AppContent = () => {
           <div
             key={sectionUser.id}
             style={{
-              display: 'flex',
+              display: "flex",
               flex: 1,
-              borderRadius: '10px',
-              flexDirection: 'column',
-              gap: '20px',
+              borderRadius: "10px",
+              flexDirection: "column",
+              gap: "20px",
             }}
           >
-            <h2 style={{ textAlign: 'left' }}>{sectionUser.title}</h2>
+            <h2 style={{ textAlign: "left" }}>{sectionUser.title}</h2>
 
             {notes
               ?.filter((note) => note.createdBy === sectionUser.id)
               .map((note) => {
-                const canUpdate = ability.can('update', {
-                  __type: 'note',
+                const canUpdate = ability.can("update", {
+                  type: "note",
                   userId: note.createdBy,
                 });
-                const canDelete = ability.can('delete', {
-                  __type: 'note',
+                console.log("debug update", {
+                  ruleYouThinkYouHave: ability.rules,
+                  subject: { type: "note", createdBy: note.createdBy },
+                  canUpdate,
+                });
+                const canDelete = ability.can("delete", {
+                  type: "note",
                   userId: note.createdBy,
                 });
+                console.log(canDelete, canUpdate);
 
                 return (
                   <div
                     key={note.id}
                     style={{
-                      backgroundColor: '#3f3f3f',
-                      padding: '15px',
-                      borderRadius: '10px',
+                      backgroundColor: "#3f3f3f",
+                      padding: "15px",
+                      borderRadius: "10px",
                     }}
                   >
                     <div
                       style={{
-                        display: 'flex',
-                        gap: '10px',
-                        justifyContent: 'space-between',
+                        display: "flex",
+                        gap: "10px",
+                        justifyContent: "space-between",
                       }}
                     >
                       <div
                         style={{
-                          display: 'flex',
-                          gap: '10px',
-                          alignItems: 'center',
+                          display: "flex",
+                          gap: "10px",
+                          alignItems: "center",
                         }}
                       >
                         {/* Checkbox visible only if user can update */}
