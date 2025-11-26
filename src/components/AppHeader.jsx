@@ -2,13 +2,13 @@ import { useContext } from "react";
 import { NotesContext } from "../context/NotesContect";
 import { users } from "../constants/app-constants";
 import { UserContext } from "../context/UserContext";
-import usePermissions from "../permissions/permissions";
+import { PermissionsContext } from "../context/PermissionsContext";
 
 const AppHeader = () => {
   const { setNotes } = useContext(NotesContext);
   const { user, setUser } = useContext(UserContext);
 
-  const ability = usePermissions(user);
+  const ability = useContext(PermissionsContext);
 
   const handleSubmit = (e) => {
     e.preventDefault();

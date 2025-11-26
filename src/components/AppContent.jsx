@@ -1,13 +1,11 @@
 import { useContext } from "react";
 import { users } from "../constants/app-constants";
 import { NotesContext } from "../context/NotesContect";
-import usePermissions from "../permissions/permissions";
-import { UserContext } from "../context/UserContext";
+import { PermissionsContext } from "../context/PermissionsContext";
 
 const AppContent = () => {
-  const { user } = useContext(UserContext);
   const { notes, setNotes } = useContext(NotesContext);
-  const ability = usePermissions(user);
+  const ability = useContext(PermissionsContext);
 
   console.log(ability.rules);
 
