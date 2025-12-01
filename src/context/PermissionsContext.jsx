@@ -1,30 +1,28 @@
-import { AbilityBuilder, createMongoAbility } from "@casl/ability";
-import { createContext, useContext, useMemo } from "react";
-import { UserContext } from "./UserContext";
+import { AbilityBuilder, createMongoAbility } from '@casl/ability';
+import { createContext, useContext, useMemo } from 'react';
+import { UserContext } from './UserContext';
+import { AdminPermissions } from '../permissions/Admin.permissions';
+import { UserPermissions } from '../permissions/User.permissions';
 
 export const PermissionsContext = createContext(createMongoAbility([]));
 
 // eslint-disable-next-line react/prop-types
 export default function PermissionsProvider({ children }) {
   const { user } = useContext(UserContext);
+
   const ability = useMemo(() => {
-    // Build ability whenever "user" changes
     const { can, cannot, build } = new AbilityBuilder(createMongoAbility);
 
-    if (!user) {
-      return build();
-    }
+    if (!user) return build();
 
-    if (user.title === "Admin") {
-      can(["update", "delete"], "note");
-      cannot("create", "note");
+    if (user.title === 'Admin') {
+      AdminPermissions(can, cannot, user);
     } else {
-      can(["update", "delete"], "note", { userId: user.id });
-      can("create", "note");
+      UserPermissions(can, cannot, user);
     }
 
     return build({
-      detectSubjectType: (subject) => subject.type,
+      detectSubjectType: (s) => s.type,
     });
   }, [user]);
 
